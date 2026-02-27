@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - NexPoint Agency</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4af37'/><path d='M16 6L6 14v12h8v-7h4v7h8V14L16 6z' fill='%23000'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .admin-container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+    .admin-header h1 { margin: 0; color: var(--gold); }
+    .btn-add { background: var(--gold); color: #000; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+    .admin-table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; }
+    .admin-table th, .admin-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .admin-table th { background: rgba(212,175,55,0.1); color: var(--gold); font-weight: 600; }
+    .admin-table tr:hover { background: rgba(255,255,255,0.02); }
+    .admin-table img { width: 80px; height: 60px; object-fit: cover; border-radius: 6px; }
+    .action-btns { display: flex; gap: 8px; }
+    .btn-edit, .btn-delete { padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; }
+    .btn-edit { background: rgba(212,175,55,0.2); color: var(--gold); }
+    .btn-delete { background: rgba(255,0,0,0.2); color: #fca5a5; }
+    .btn-edit:hover { background: rgba(212,175,55,0.3); }
+    .btn-delete:hover { background: rgba(255,0,0,0.3); }
+    .btn-ai { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-ai:hover { opacity: 0.9; }
+    .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto; }
+    .modal.active { display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; }
+    .modal-content { background: var(--bg); border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; padding: 24px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .modal-header h2 { margin: 0; color: var(--gold); }
+    .modal-close { background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 13px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.3); background: rgba(255,255,255,0.1); color: #fff; font-size: 14px; }
+    .form-group select { cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23d4af37' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+    .form-group select option { background: #1a1a1a; color: #fff; padding: 10px; }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--gold); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+    .btn-save { background: var(--gold); color: #000; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
+    .btn-cancel { background: transparent; color: var(--muted); padding: 10px 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
+    .btn-save:hover { background: #e5c14b; }
+    .btn-cancel:hover { border-color: var(--muted); }
+    .empty-state { text-align: center; padding: 48px; color: var(--muted); }
+    .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .login-box { background: rgba(255,255,255,0.02); border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; padding: 40px; width: 100%; max-width: 400px; }
+    .login-box h1 { color: var(--gold); text-align: center; margin: 0 0 8px 0; font-size: 24px; }
+    .login-box .subtitle { color: var(--muted); text-align: center; margin: 0 0 24px 0; font-size: 14px; }
+    .login-box .form-group { margin-bottom: 20px; }
+    .login-box .btn-login { width: 100%; background: var(--gold); color: #000; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 15px; }
+    .login-box .btn-login:hover { background: #e5c14b; }
+    .login-error { color: #fca5a5; background: rgba(255,0,0,0.1); padding: 12px; border-radius: 8px; margin-bottom: 16px; text-align: center; display: none; }
+    .login-error.show { display: block; }
+    .admin-content { display: none; }
+    .admin-content.active { display: block; }
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+    .toast { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out; min-width: 280px; }
+    .toast.success { background: rgba(34, 197, 94, 0.9); color: #fff; }
+    .toast.error { background: rgba(239, 68, 68, 0.9); color: #fff; }
+    .toast.info { background: rgba(59, 130, 246, 0.9); color: #fff; }
+    .toast-icon { font-size: 20px; }
+    .toast-message { flex: 1; font-size: 14px; font-weight: 500; }
+    .toast-close { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; opacity: 0.8; }
+    .toast-close:hover { opacity: 1; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+    .toast.hiding { animation: slideOut 0.3s ease-in forwards; }
+    @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .admin-table { display: block; overflow-x: auto; } }
+  </style>
+</head>
+<body>
+<div id="toastContainer" class="toast-container"></div>
+<div id="loginPage" class="login-container">
+  <div class="login-box">
+    <h1>NexPoint Admin</h1>
+    <p class="subtitle">Masuk untuk mengelola properti</p>
+    <div id="loginError" class="login-error">Username atau password salah!</div>
+    <form id="loginForm">
+      <div class="form-group"><label>Username</label><input type="text" id="username" required placeholder="Masukkan username"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="password" required placeholder="Masukkan password"></div>
+      <button type="submit" class="btn-login">Masuk</button>
+    </form>
+    <p style="text-align:center;margin-top:16px;color:var(--muted);font-size:12px">Created by Ncung Fucking Gallagher</p>
+  </div>
+</div>
+<div id="adminContent" class="admin-content">
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><rect width="32" height="32" rx="6" fill="#d4af37"/><path d="M16 6L6 14v12h8v-7h4v7h8V14L16 6z" fill="#000"/></svg>
+        </div>
+        <div class="brand-text"><h1>NexPoint Agency</h1><p class="tag">Admin Panel - Kelola Properti</p></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <a href="index.html" class="btn outline small">← Lihat Website</a>
+        <button onclick="logout()" class="btn small" style="background:rgba(255,0,0,0.2);color:#fca5a5;border:none">Logout</button>
+      </div>
+    </div>
+  </header>
+  <main class="admin-container">
+    <div class="admin-section">
+      <div class="admin-header">
+        <h1>Daftar Properti</h1>
+        <a href="#" class="btn-add" onclick="openPropertyModal()">+ Tambah Properti</a>
+      </div>
+      <table class="admin-table">
+        <thead><tr><th>Gambar</th><th>Jenis Lahan</th><th>Nama Lahan</th><th>Harga</th><th>Lokasi</th><th>Aksi</th></tr></thead>
+        <tbody id="propertyTable"></tbody>
+      </table>
+      <div id="emptyState" class="empty-state" style="display:none"><p>Belum ada properti. Klik "+ Tambah Properti" untuk menambahkan.</p></div>
+    </div>
+    <div class="admin-section" style="margin-top: 48px;">
+      <div class="admin-header">
+        <h1>Hubungi Kami</h1>
+        <a href="#" class="btn-add" onclick="openContactModal()">+ Tambah Kontak</a>
+      </div>
+      <table class="admin-table">
+        <thead><tr><th>Inisial</th><th>Nama</th><th>No. WhatsApp</th><th>Aksi</th></tr></thead>
+        <tbody id="contactTable"></tbody>
+      </table>
+<div id="contactEmptyState" class="empty-state" style="display:none"><p>Belum ada kontak. Klik "+ Tambah Kontak" untuk menambahkan.</p></div>
+    </div>
+    
+    <!-- ANALYTICS SECTION -->
+    <div class="admin-section" style="margin-top: 48px;">
+      <div class="admin-header">
+        <h1>Analytics Pengunjung</h1>
+        <button onclick="loadAnalytics()" class="btn small outline">Refresh</button>
+      </div>
+      
+      <!-- Stats Cards -->
+      <div class="analytics-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div class="stat-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(212,175,55,0.2); border-radius: 10px; padding: 20px; text-align: center;">
+          <div style="font-size: 32px; color: var(--gold); font-weight: bold;" id="totalVisitors">0</div>
+          <div style="color: var(--muted); font-size: 13px;">Total Pengunjung</div>
+        </div>
+        <div class="stat-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(212,175,55,0.2); border-radius: 10px; padding: 20px; text-align: center;">
+          <div style="font-size: 32px; color: #22c55e; font-weight: bold;" id="todayVisitors">0</div>
+          <div style="color: var(--muted); font-size: 13px;">Pengunjung Hari Ini</div>
+        </div>
+        <div class="stat-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(212,175,55,0.2); border-radius: 10px; padding: 20px; text-align: center;">
+          <div style="font-size: 32px; color: #3b82f6; font-weight: bold;" id="indexViews">0</div>
+          <div style="color: var(--muted); font-size: 13px;">Halaman Utama</div>
+        </div>
+        <div class="stat-card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(212,175,55,0.2); border-radius: 10px; padding: 20px; text-align: center;">
+          <div style="font-size: 32px; color: #f97316; font-weight: bold;" id="detailViews">0</div>
+          <div style="color: var(--muted); font-size: 13px;">Halaman Detail</div>
+        </div>
+      </div>
+      
+      <!-- Language & Referrer -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div>
+          <h3 style="color: var(--gold); margin-bottom: 12px;">Bahasa Browser</h3>
+          <table class="admin-table" id="languageTable">
+            <thead><tr><th>Bahasa</th><th>Jumlah</th><th>%</th></tr></thead>
+            <tbody id="languageTableBody"></tbody>
+          </table>
+        </div>
+        <div>
+          <h3 style="color: var(--gold); margin-bottom: 12px;">Referrer</h3>
+          <table class="admin-table" id="referrerTable">
+            <thead><tr><th>Sumber</th><th>Jumlah</th></tr></thead>
+            <tbody id="referrerTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Recent Visits -->
+      <div style="margin-top: 24px;">
+        <h3 style="color: var(--gold); margin-bottom: 12px;">Riwayat Kunjungan Terbaru</h3>
+        <table class="admin-table">
+          <thead><tr><th>Waktu</th><th>Halaman</th><th>Property ID</th><th>Bahasa</th><th>Sumber</th></tr></thead>
+          <tbody id="recentVisitsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  <div id="propertyModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><h2 id="modalTitle">Tambah Properti</h2><button class="modal-close" onclick="closePropertyModal()">&times;</button></div>
+      <form id="propertyForm">
+        <input type="hidden" id="propertyId">
+        <div class="form-row">
+          <div class="form-group"><label>Jenis Lahan *</label><select id="landType" required onchange="updateAIDescription()"><option value="">-- Pilih Jenis Lahan --</option><option value="Tanah Sewa">Tanah Sewa</option><option value="Tanah Kavling">Tanah Kavling</option><option value="Tanah Global">Tanah Global</option></select></div>
+          <div class="form-group"><label>Nama Lahan *</label><input type="text" id="title" required placeholder="Contoh: Jl. Pura Demak" oninput="updateAIDescription()"></div>
+        </div>
+        <div class="form-group">
+          <label>Deskripsi Singkat * 
+            <button type="button" class="btn-ai" onclick="generateAIDescription()" style="margin-left:10px">✨ AI Generate</button>
+          </label>
+          <textarea id="short" required placeholder="Deskripsi singkat tentang properti" rows="2"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Harga (Angka) *</label><input type="number" id="price" required placeholder="Contoh: 12" oninput="updateAIDescription()"></div>
+          <div class="form-group"><label>Satuan Harga *</label><select id="priceUnit" required onchange="updateAIDescription()"><option value="">-- Pilih Satuan --</option><option value="Juta">Juta</option><option value="Miliar">Miliar</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Satuan Ukuran (Sewa)</label><select id="sizeUnit" onchange="updateAIDescription()"><option value="">-- Pilih Satuan (Sewa) --</option><option value="/ 100m²">/ 100m²</option><option value="/ 100m² / Tahun">/ 100m² / Tahun</option><option value="null">(null - Penjualan Tanah Global)</option></select></div>
+          <div class="form-group"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Lokasi *</label><input type="text" id="location" required placeholder="Contoh: Jl. Pura Demak, Denpasar" oninput="updateAIDescription()"></div>
+          <div class="form-group"><label>Luas Tanah</label><input type="text" id="land_size" placeholder="Contoh: 3.940 m²" oninput="updateAIDescription()"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Sertifikat</label><input type="text" id="certificate" placeholder="Contoh: SHM" oninput="updateAIDescription()"></div>
+          <div class="form-group"><label>Link Google Maps</label><input type="url" id="maps" placeholder="https://maps.app.goo.gl/..."></div>
+        </div>
+        <div class="form-group"><label>No. WhatsApp</label><input type="text" id="contact" placeholder="6283840335231"></div>
+        <div class="form-group"><label>Gambar Utama (URL) *</label><input type="url" id="image" required placeholder="https://..."></div>
+        <div class="form-group"><label>Galeri (URL - satu per baris)</label><textarea id="gallery" placeholder="https://...&#10;https://..." rows="3"></textarea></div>
+        <div class="form-actions"><button type="button" class="btn-cancel" onclick="closePropertyModal()">Batal</button><button type="submit" class="btn-save">Simpan</button></div>
+      </form>
+    </div>
+  </div>
+  <div id="contactModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><h2 id="contactModalTitle">Tambah Kontak</h2><button class="modal-close" onclick="closeContactModal()">&times;</button></div>
+      <form id="contactForm">
+        <input type="hidden" id="contactId">
+        <div class="form-group"><label>Nama *</label><input type="text" id="contactName" required placeholder="Contoh: Rifky Rangga"></div>
+        <div class="form-group"><label>No. WhatsApp *</label><input type="text" id="contactPhone" required placeholder="6283840335231"></div>
+        <div class="form-group"><label>Tampilan No. HP</label><input type="text" id="contactDisplayPhone" placeholder="0838-4033-5231"></div>
+        <div class="form-group"><label>Inisial (Huruf Pertama)</label><input type="text" id="contactInitials" placeholder="R" maxlength="2"></div>
+        <div class="form-actions"><button type="button" class="btn-cancel" onclick="closeContactModal()">Batal</button><button type="submit" class="btn-save">Simpan</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  const icons = { success: '✓', error: '✕', info: 'ℹ' };
+  toast.innerHTML = '<span class="toast-icon">' + icons[type] + '</span><span class="toast-message">' + message + '</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>';
+  container.appendChild(toast);
+  setTimeout(() => { if (toast.parentElement) { toast.classList.add('hiding'); setTimeout(() => toast.remove(), 300); } }, 4000);
+}
+
+const updateChannel = new BroadcastChannel('nexpoint_updates');
+const ADMIN_USER = 'karepencung';
+const ADMIN_PASS = 'Berkah2026';
+let properties = [];
+let contacts = [];
+
+// AI Description Generator
+let aiDescriptionData = {};
+
+function updateAIDescription() {
+  const priceValue = document.getElementById('price').value;
+  const priceUnit = document.getElementById('priceUnit').value;
+  const finalPrice = priceValue && priceUnit ? 'Rp ' + priceValue + ' ' + priceUnit : priceValue;
+  
+  aiDescriptionData = {
+    landType: document.getElementById('landType').value,
+    title: document.getElementById('title').value,
+    price: finalPrice,
+    priceValue: priceValue,
+    priceUnit: priceUnit,
+    location: document.getElementById('location').value,
+    landSize: document.getElementById('land_size').value,
+    certificate: document.getElementById('certificate').value,
+    sizeUnit: document.getElementById('sizeUnit').value
+  };
+}
+
+function generateAIDescription() {
+  const d = aiDescriptionData;
+  const btn = document.querySelector('.btn-ai');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+  
+  // Simulate AI processing delay
+  setTimeout(() => {
+    let desc = '';
+    
+    if (d.landType === 'Tanah Sewa') {
+      if (d.landSize && d.location) {
+        desc = `Tanah sewaan seluas ${d.landSize} located di ${d.location || ' strategis'}${d.certificate ? ' dengan sertifikat ' + d.certificate : ''}, cocok untuk ${d.title ? d.title.toLowerCase() : 'investasi'} Anda.`;
+      } else {
+        desc = `Tanah sewaan strategis di ${d.location || 'lokasi terbaik'}${d.landSize ? ' seluas ' + d.landSize : ''}${d.certificate ? ' dengan sertifikat ' + d.certificate : ''}, peluang investasi menarik.`;
+      }
+    } else if (d.landType === 'Tanah Kavling') {
+      if (d.landSize && d.location) {
+        desc = `Kavling siap bangun seluas ${d.landSize} di ${d.location || ' area berkembang'}${d.certificate ? ' bersertifikat ' + d.certificate : ''}, ideal untuk rumah/idungan keluarga.`;
+      } else {
+        desc = `Kavling premium di ${d.location || 'lokasi strategis'}${d.landSize ? ' dengan luas ' + d.landSize : ''}${d.certificate ? ' dan sertifikat ' + d.certificate : ''}, investasi masa depan.`;
+      }
+    } else if (d.landType === 'Tanah Global') {
+      if (d.price && d.location) {
+        desc = `Tanah${d.title ? ' ' + d.title.toLowerCase() : ''} di ${d.location} ditawarkan dengan harga ${d.price}, kesempatan emas miliki tanah${d.landSize ? ' seluas ' + d.landSize : ''}${d.certificate ? ' bersertifikat ' + d.certificate : ''}.`;
+      } else {
+        desc = `Tanah${d.title ? ' ' + d.title.toLowerCase() : ''} strategis di ${d.location || 'lokasi premium'}${d.landSize ? ' seluas ' + d.landSize : ''}${d.certificate ? ' dengan sertifikat ' + d.certificate : ''}, investasi menguntungkan.`;
+      }
+    } else {
+      // Default description
+      if (d.title && d.location) {
+        desc = `Properti${d.title ? ' ' + d.title.toLowerCase() : ''} di ${d.location}${d.landSize ? ' seluas ' + d.landSize : ''}${d.certificate ? ' dengan sertifikat ' + d.certificate : ''}, investasi terbaik.`;
+      } else {
+        desc = `Properti strategis di ${d.location || 'lokasi terbaik'}${d.landSize ? ' seluas ' + d.landSize : ''}, kesempatan investasi menarik.`;
+      }
+    }
+    
+    document.getElementById('short').value = desc;
+    btn.disabled = false;
+    btn.textContent = '✨ AI Generate';
+    showToast('Deskripsi AI berhasil dibuat!', 'success');
+  }, 800);
+}
+
+function checkAuth() { const isLoggedIn = localStorage.getItem('nexpoint_admin_logged_in'); if (isLoggedIn === 'true') { showAdmin(); } }
+function showAdmin() { document.getElementById('loginPage').style.display = 'none'; document.getElementById('adminContent').classList.add('active'); loadProperties(); loadContacts(); }
+function showLogin() { document.getElementById('loginPage').style.display = 'flex'; document.getElementById('adminContent').classList.remove('active'); }
+document.getElementById('loginForm').addEventListener('submit', function(e) { e.preventDefault(); const user = document.getElementById('username').value; const pass = document.getElementById('password').value; if (user === ADMIN_USER && pass === ADMIN_PASS) { localStorage.setItem('nexpoint_admin_logged_in', 'true'); document.getElementById('loginError').classList.remove('show'); showAdmin(); showToast('Login berhasil!', 'success'); } else { document.getElementById('loginError').classList.add('show'); } });
+function logout() { localStorage.removeItem('nexpoint_admin_logged_in'); showLogin(); showToast('Logout berhasil!', 'info'); }
+async function loadProperties() {
+  try { const res = await fetch('properties.json'); const jsonProperties = await res.json(); const stored = localStorage.getItem('nexpoint_properties'); let localProperties = []; if (stored) { try { localProperties = JSON.parse(stored); } catch (e) { console.log('Could not parse localStorage'); } } const jsonIds = jsonProperties.map(p => p.id); const newFromLocal = localProperties.filter(p => !jsonIds.includes(p.id)); properties = [...jsonProperties, ...newFromLocal]; saveProperties(); } catch (err) { console.error('Error loading properties:', err); const stored = localStorage.getItem('nexpoint_properties'); if (stored) { try { properties = JSON.parse(stored); } catch (e) { properties = []; } } else { properties = []; } }
+  renderPropertyTable();
+}
+function saveProperties() {
+  localStorage.setItem('nexpoint_properties', JSON.stringify(properties));
+  updateChannel.postMessage({ type: 'properties_updated' });
+  
+  // Catatan: Untuk deployment Vercel, data disimpan di localStorage browser.
+  // Data akan tersedia di browser yang sama tempat admin diakses.
+  // Untuk penyimpanan permanen di Vercel, diperlukan backend terpisah atau database.
+  showToast('Properti berhasil disimpan!', 'success');
+}
+function renderPropertyTable() {
+  const tbody = document.getElementById('propertyTable'); const emptyState = document.getElementById('emptyState');
+  if (properties.length === 0) { tbody.innerHTML = ''; emptyState.style.display = 'block'; return; }
+  emptyState.style.display = 'none';
+  tbody.innerHTML = properties.map(p => '<tr><td><img src="' + p.image + '" alt="' + p.title + '"></td><td>' + (p.land_type || '-') + '</td><td>' + (p.title || '-') + '</td><td>' + p.price + (p.size_unit || '') + '</td><td>' + (p.location || '-') + '</td><td><div class="action-btns"><button class="btn-edit" onclick="editProperty(\'' + p.id + '\')">Edit</button><button class="btn-delete" onclick="deleteProperty(\'' + p.id + '\')">Hapus</button></div></td></tr>').join('');
+}
+function generatePropertyId() { return 'prop-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9); }
+function openPropertyModal(id = null) {
+  const modal = document.getElementById('propertyModal'); const form = document.getElementById('propertyForm'); const title = document.getElementById('modalTitle');
+  form.reset(); document.getElementById('propertyId').value = ''; document.getElementById('sizeUnit').value = ''; document.getElementById('landType').value = ''; document.getElementById('priceUnit').value = ''; aiDescriptionData = {};
+  if (id) { const p = properties.find(x => x.id === id); if (p) { title.textContent = 'Edit Properti'; document.getElementById('propertyId').value = p.id; document.getElementById('landType').value = p.land_type || ''; document.getElementById('title').value = p.title || ''; document.getElementById('short').value = p.short || ''; 
+    // Parse price and priceUnit from saved data
+    const priceStr = p.price || '';
+    const priceMatch = priceStr.match(/^Rp\s*(\d+)\s*(Juta|Miliar)$/);
+    if (priceMatch) {
+      document.getElementById('price').value = priceMatch[1];
+      document.getElementById('priceUnit').value = priceMatch[2];
+    } else {
+      document.getElementById('price').value = priceStr;
+    }
+    document.getElementById('sizeUnit').value = p.size_unit || ''; document.getElementById('location').value = p.location || ''; document.getElementById('land_size').value = p.land_size || ''; document.getElementById('certificate').value = p.certificate || ''; document.getElementById('maps').value = p.maps || ''; document.getElementById('contact').value = p.contact || ''; document.getElementById('image').value = p.image || ''; document.getElementById('gallery').value = p.gallery ? p.gallery.join('\n') : ''; updateAIDescription(); } } else { title.textContent = 'Tambah Properti'; }
+  modal.classList.add('active');
+}
+function closePropertyModal() { document.getElementById('propertyModal').classList.remove('active'); }
+function editProperty(id) { openPropertyModal(id); }
+function deleteProperty(id) { if (confirm('Apakah Anda yakin ingin menghapus properti ini?')) { properties = properties.filter(p => p.id !== id); saveProperties(); renderPropertyTable(); showToast('Properti berhasil dihapus!', 'success'); } }
+document.getElementById('propertyForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const id = document.getElementById('propertyId').value; const galleryText = document.getElementById('gallery').value; const gallery = galleryText ? galleryText.split('\n').filter(url => url.trim()) : []; const imageUrl = document.getElementById('image').value; const priceValue = document.getElementById('price').value; const priceUnit = document.getElementById('priceUnit').value; const finalPrice = priceValue && priceUnit ? 'Rp ' + priceValue + ' ' + priceUnit : priceValue; let sizeUnit = document.getElementById('sizeUnit').value;
+  if (sizeUnit === 'null') { sizeUnit = ''; }
+  const propertyData = { id: id || generatePropertyId(), land_type: document.getElementById('landType').value, title: document.getElementById('title').value, short: document.getElementById('short').value, price: finalPrice, size_unit: sizeUnit, location: document.getElementById('location').value, land_size: document.getElementById('land_size').value, certificate: document.getElementById('certificate').value, maps: document.getElementById('maps').value, contact: document.getElementById('contact').value, image: imageUrl, gallery: gallery.length > 0 ? gallery : [imageUrl], marketing: 'Rifky Rangga' };
+  if (id) { const index = properties.findIndex(p => p.id === id); if (index !== -1) { properties[index] = propertyData; } } else { properties.push(propertyData); }
+  saveProperties(); renderPropertyTable(); closePropertyModal(); showToast(id ? 'Properti berhasil diperbarui!' : 'Properti berhasil ditambahkan!', 'success');
+});
+async function loadContacts() {
+  try { const res = await fetch('contacts.json'); contacts = await res.json(); } catch (err) { console.error('Error loading contacts:', err); const stored = localStorage.getItem('nexpoint_contacts'); if (stored) { try { contacts = JSON.parse(stored); } catch (e) { contacts = []; } } else { contacts = []; } }
+  renderContactTable();
+}
+function saveContacts() {
+  localStorage.setItem('nexpoint_contacts', JSON.stringify(contacts));
+  updateChannel.postMessage({ type: 'contacts_updated' });
+  
+  // Catatan: Untuk deployment Vercel, data disimpan di localStorage browser.
+  showToast('Kontak berhasil disimpan!', 'success');
+}
+function renderContactTable() {
+  const tbody = document.getElementById('contactTable'); const emptyState = document.getElementById('contactEmptyState');
+  if (!contacts || contacts.length === 0) { tbody.innerHTML = ''; emptyState.style.display = 'block'; return; }
+  emptyState.style.display = 'none';
+  tbody.innerHTML = contacts.map(c => '<tr><td><div class="avatar">' + (c.initials || c.name.charAt(0)) + '</div></td><td>' + c.name + '</td><td><a class="wa-link" href="https://wa.me/' + c.phone + '" target="_blank">' + (c.display_phone || c.phone) + '</a></td><td><div class="action-btns"><button class="btn-edit" onclick="editContact(\'' + c.id + '\')">Edit</button><button class="btn-delete" onclick="deleteContact(\'' + c.id + '\')">Hapus</button></div></td></tr>').join('');
+}
+function generateContactId() { return 'contact-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9); }
+function openContactModal(id = null) {
+  const modal = document.getElementById('contactModal'); const form = document.getElementById('contactForm'); const title = document.getElementById('contactModalTitle');
+  form.reset(); document.getElementById('contactId').value = '';
+  if (id) { const c = contacts.find(x => x.id === id); if (c) { title.textContent = 'Edit Kontak'; document.getElementById('contactId').value = c.id; document.getElementById('contactName').value = c.name; document.getElementById('contactPhone').value = c.phone; document.getElementById('contactDisplayPhone').value = c.display_phone || ''; document.getElementById('contactInitials').value = c.initials || ''; } } else { title.textContent = 'Tambah Kontak'; }
+  modal.classList.add('active');
+}
+function closeContactModal() { document.getElementById('contactModal').classList.remove('active'); }
+function editContact(id) { openContactModal(id); }
+function deleteContact(id) { if (confirm('Apakah Anda yakin ingin menghapus kontak ini?')) { contacts = contacts.filter(c => c.id !== id); saveContacts(); renderContactTable(); showToast('Kontak berhasil dihapus!', 'success'); } }
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const id = document.getElementById('contactId').value;
+  const contactData = { id: id || generateContactId(), name: document.getElementById('contactName').value, phone: document.getElementById('contactPhone').value, display_phone: document.getElementById('contactDisplayPhone').value, initials: document.getElementById('contactInitials').value };
+  if (id) { const index = contacts.findIndex(c => c.id === id); if (index !== -1) { contacts[index] = contactData; } } else { contacts.push(contactData); }
+  saveContacts(); renderContactTable(); closeContactModal(); showToast(id ? 'Kontak berhasil diperbarui!' : 'Kontak berhasil ditambahkan!', 'success');
+});
+document.getElementById('propertyModal').addEventListener('click', function(e) { if (e.target === this) { closePropertyModal(); } });
+document.getElementById('contactModal').addEventListener('click', function(e) { if (e.target === this) { closeContactModal(); } });
+checkAuth();
+
+// Analytics Functions
+function loadAnalytics() {
+  try {
+    const analytics = JSON.parse(localStorage.getItem('nexpoint_analytics') || '[]');
+    
+    if (analytics.length === 0) {
+      document.getElementById('totalVisitors').textContent = '0';
+      document.getElementById('todayVisitors').textContent = '0';
+      document.getElementById('indexViews').textContent = '0';
+      document.getElementById('detailViews').textContent = '0';
+      document.getElementById('languageTableBody').innerHTML = '<tr><td colspan="3">Belum ada data</td></tr>';
+      document.getElementById('referrerTableBody').innerHTML = '<tr><td colspan="2">Belum ada data</td></tr>';
+      document.getElementById('recentVisitsTable').innerHTML = '<tr><td colspan="5">Belum ada data</td></tr>';
+      return;
+    }
+    
+    // Total visitors
+    document.getElementById('totalVisitors').textContent = analytics.length;
+    
+    // Today's visitors
+    const today = new Date().toDateString();
+    const todayVisitors = analytics.filter(v => new Date(v.timestamp).toDateString() === today).length;
+    document.getElementById('todayVisitors').textContent = todayVisitors;
+    
+    // Page views
+    const indexViews = analytics.filter(v => v.page === 'index.html').length;
+    const detailViews = analytics.filter(v => v.page === 'detail.html').length;
+    document.getElementById('indexViews').textContent = indexViews;
+    document.getElementById('detailViews').textContent = detailViews;
+    
+    // Language stats
+    const langCounts = {};
+    analytics.forEach(v => {
+      const lang = v.language || 'unknown';
+      langCounts[lang] = (langCounts[lang] || 0) + 1;
+    });
+    
+    const langSorted = Object.entries(langCounts).sort((a, b) => b[1] - a[1]);
+    const langPercent = (count) => ((count / analytics.length) * 100).toFixed(1);
+    
+    document.getElementById('languageTableBody').innerHTML = langSorted.map(([lang, count]) => 
+      '<tr><td>' + lang + '</td><td>' + count + '</td><td>' + langPercent(count) + '%</td></tr>'
+    ).join('');
+    
+    // Referrer stats
+    const refCounts = {};
+    analytics.forEach(v => {
+      const ref = v.referrer || 'direct';
+      refCounts[ref] = (refCounts[ref] || 0) + 1;
+    });
+    
+    const refSorted = Object.entries(refCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    document.getElementById('referrerTableBody').innerHTML = refSorted.map(([ref, count]) => 
+      '<tr><td>' + ref + '</td><td>' + count + '</td></tr>'
+    ).join('');
+    
+    // Recent visits (last 20)
+    const recent = analytics.slice(-20).reverse();
+    document.getElementById('recentVisitsTable').innerHTML = recent.map(v => {
+      const date = new Date(v.timestamp);
+      return '<tr><td>' + date.toLocaleString('id-ID') + '</td><td>' + v.page + '</td><td>' + (v.propertyId || '-') + '</td><td>' + (v.language || '-') + '</td><td>' + (v.referrer || 'direct') + '</td></tr>';
+    }).join('');
+    
+  } catch (e) {
+    console.log('Error loading analytics:', e);
+  }
+}
+
+// Load analytics when admin is shown
+const originalShowAdmin = showAdmin;
+showAdmin = function() {
+  originalShowAdmin();
+  loadAnalytics();
+};
+</script>
+</body>
+</html>

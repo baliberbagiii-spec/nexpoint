@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detail Properti — NexPoint Agency</title>
+
+  <meta name="description" content="Detail properti NexPoint Agency">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4af37'/><path d='M16 6L6 14v12h8v-7h4v7h8V14L16 6z' fill='%23000'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="site-header">
+  <div class="container header-inner">
+    <!-- Hidden Google Translate - Auto Translate -->
+    <div id="google_translate_element" style="display:none"></div>
+    <div class="brand">
+      <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+          <rect width="32" height="32" rx="6" fill="#d4af37"/>
+          <path d="M16 6L6 14v12h8v-7h4v7h8V14L16 6z" fill="#000"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>NexPoint Agency</h1>
+        <p class="tag">Temukan Investasi Properti Impian Anda</p>
+      </div>
+    </div>
+    <a href="index.html" class="btn outline small">← Kembali</a>
+  </div>
+</header>
+
+<!-- ================= MAIN ================= -->
+<main class="container main-detail">
+  <div id="detail"></div>
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div>© <span id="year"></span> NexPoint Agency</div>
+    <div class="footer-info">
+      <div class="footer-address">Jl. Buluh Indah No.58, Pemecutan Kaja, Kec. Denpasar Utara, Kota Denpasar, Bali 80118</div>
+      <div class="footer-hours">Jam Kerja: 08.00 WITA - 17.00 WITA</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ================= ANALYTICS TRACKING ================= -->
+<script>
+// Track visitor analytics
+(function() {
+  try {
+    const analyticsKey = 'nexpoint_analytics';
+    let analytics = JSON.parse(localStorage.getItem(analyticsKey) || '[]');
+    
+    // Get property ID from URL if available
+    const params = new URLSearchParams(window.location.search);
+    const propertyId = params.get('id') || 'unknown';
+    
+    // Get visitor info
+    const visitorData = {
+      page: 'detail.html',
+      propertyId: propertyId,
+      timestamp: new Date().toISOString(),
+      referrer: document.referrer || 'direct',
+      language: navigator.language || navigator.userLanguage || 'unknown',
+      userAgent: navigator.userAgent || 'unknown',
+      screenWidth: window.screen.width,
+      platform: navigator.platform || 'unknown'
+    };
+    
+    // Add to analytics array (keep last 1000 visits)
+    analytics.push(visitorData);
+    if (analytics.length > 1000) {
+      analytics = analytics.slice(-1000);
+    }
+    
+    localStorage.setItem(analyticsKey, JSON.stringify(analytics));
+  } catch (e) {
+    console.log('Analytics tracking error:', e);
+  }
+})();
+</script>
+
+<!-- ================= SCRIPT ================= -->
+<script>
+// Check if accessed from valid page
+(function() {
+  const referrer = document.referrer;
+  const hasValidReferrer = referrer && (referrer.includes('index.html') || referrer.includes('detail.html') || referrer.includes('admin.html'));
+  const hasIdParam = window.location.search.includes('id=');
+  
+  // Allow if has valid ID parameter or came from valid page
+  if (!hasIdParam && !hasValidReferrer && referrer !== '') {
+    window.location.href = '404.html';
+  }
+})();
+
+async function loadDetail() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  if (!id) {
+    document.getElementById('detail').innerHTML =
+      '<p class="error">Properti tidak ditemukan.</p>';
+    return;
+  }
+
+  let properties = [];
+  
+  // First try localStorage (admin updates)
+  const stored = localStorage.getItem('nexpoint_properties');
+  if (stored) {
+    try {
+      const localProperties = JSON.parse(stored);
+      if (localProperties.length > 0) {
+        properties = localProperties;
+      }
+    } catch (e) {
+      console.log('Could not parse localStorage');
+    }
+  }
+  
+  // If no local data, load from JSON file
+  if (properties.length === 0) {
+    try {
+      const res = await fetch('properties.json');
+      properties = await res.json();
+    } catch (err) {
+      console.error('Error loading properties:', err);
+    }
+  }
+  
+  const p = properties.find(item => item.id === id);
+
+  if (!p) {
+    document.getElementById('detail').innerHTML =
+      '<p class="error">Properti tidak ditemukan.</p>';
+    return;
+  }
+
+  // Combine land_type and title for display
+  const displayTitle = p.land_type && p.title 
+    ? p.land_type + ' - ' + p.title 
+    : p.title || p.land_type || 'Properti';
+
+  document.title = displayTitle;
+
+  document.getElementById('detail').innerHTML = `
+    <div class="detail-grid">
+
+      <!-- GALLERY -->
+      <div class="detail-image">
+        <img id="mainImage" src="${p.gallery ? p.gallery[0] : p.image}" alt="${displayTitle}">
+        <div class="thumbs" id="thumbnails"></div>
+      </div>
+
+      <!-- INFO -->
+      <div class="detail-info">
+        <h1 class="detail-title">${displayTitle}</h1>
+        <p class="detail-price">${p.price}${p.size_unit || ''}</p>
+        <p class="detail-desc">${p.short}</p>
+
+        <ul class="detail-spec">
+          <li><span class="spec-label">Lokasi:</span> <span class="spec-value">${p.location || '-'}</span></li>
+          <li><span class="spec-label">Luas Tanah:</span> <span class="spec-value">${p.land_size || '-'}</span></li>
+          <li><span class="spec-label">Sertifikat:</span> <span class="spec-value">${p.certificate || '-'}</span></li>
+          <li><span class="spec-label">Maps:</span> <span class="spec-value">${
+              p.maps
+                ? `<a href="${p.maps}" target="_blank" class="maps-link">${p.maps}</a>`
+                : '-'
+            }</span></li>
+        </ul>
+        
+        <div class="card-actions detail-actions">
+          <h3 class="detail-contact-title">Untuk informasi lengkapnya :</h3>
+          <a class="btn primary"
+             href="https://wa.me/${p.contact}?text=${encodeURIComponent(
+               'Halo, saya tertarik dengan ' + displayTitle
+             )}"
+             target="_blank">
+            Hubungi via WhatsApp
+          </a>
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  // ===== GALLERY LOGIC =====
+  const gallery = p.gallery || [p.image];
+  const mainImage = document.getElementById('mainImage');
+  const thumbs = document.getElementById('thumbnails');
+
+  gallery.forEach((img, index) => {
+    const thumb = document.createElement('img');
+    thumb.src = img;
+    if (index === 0) thumb.classList.add('active');
+
+    thumb.onclick = () => {
+      mainImage.src = img;
+      document
+        .querySelectorAll('.thumbs img')
+        .forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+    };
+
+    thumbs.appendChild(thumb);
+  });
+}
+
+document.getElementById('year').textContent = new Date().getFullYear();
+loadDetail();
+</script>
+
+<!-- ================= GOOGLE TRANSLATE (HIDDEN - AUTO BY LOCATION) ================= -->
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'id',
+    includedLanguages: 'en,id,ms,zh-CN,ja,ko,ar',
+    layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL,
+    autoDisplay: false
+  }, 'google_translate_element');
+  
+  // Auto translate based on user's language (hidden)
+  setTimeout(function() {
+    var select = document.querySelector('.goog-te-combo');
+    if (select && select.value !== 'id') {
+      select.dispatchEvent(new Event('change'));
+    }
+  }, 1500);
+}
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+</body>
+</html>

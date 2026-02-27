@@ -1,0 +1,16 @@
+[
+  {
+    "id": "contact-1",
+    "name": "Rifky Rangga",
+    "phone": "6283840335231",
+    "display_phone": "0838-4033-5231",
+    "initials": "R"
+  },
+  {
+    "id": "contact-2",
+    "name": "Aziz Gagap",
+    "phone": "6283840335231",
+    "display_phone": "0838-4033-5231",
+    "initials": "A"
+  }
+]
